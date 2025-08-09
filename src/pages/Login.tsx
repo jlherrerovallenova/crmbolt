@@ -145,7 +145,7 @@ const Login: React.FC = () => {
                     </p>
                     <ol className="mt-2 list-decimal list-inside space-y-1">
                       <li>Ve a tu dashboard de Supabase</li>
-                      <li>Navega a Authentication → Settings</li>
+                      <li>Navega a Authentication → Emails</li>
                       <li>Desactiva "Enable email confirmations"</li>
                     </ol>
                   </div>

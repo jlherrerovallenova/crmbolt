@@ -145,7 +145,7 @@ VITE_SUPABASE_ANON_KEY=tu_clave_anonima
 5. **Configurar autenticación en Supabase**
 Para evitar errores de "Email not confirmed":
 - Ve a tu dashboard de Supabase
-- Navega a **Authentication** → **Settings**
+- Navega a **Authentication** → **Emails**
 - Desactiva **"Enable email confirmations"**
 - Esto permite el login inmediato sin verificación de email
 
