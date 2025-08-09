@@ -143,12 +143,19 @@ VITE_SUPABASE_ANON_KEY=tu_clave_anonima
 ```
 
 5. **Configurar autenticación en Supabase**
-Para evitar errores de "Email not confirmed":
-- Ve a tu dashboard de Supabase
-- Navega a **Authentication** → **Emails**
-- Desactiva **"Enable email confirmations"**
-- Esto permite el login inmediato sin verificación de email
+Para evitar errores de "Email not confirmed", tienes dos opciones:
 
+**Opción 1: Deshabilitar confirmación de email**
+- Ve a **Authentication** → **Settings** (puede no estar visible en el sidebar)
+- Busca "Enable email confirmations" y desactívalo
+
+**Opción 2: Crear usuarios manualmente**
+- Ve a **Authentication** → **Users**
+- Haz clic en "Add user" 
+- Crea los usuarios de prueba manualmente:
+  - admin@crm.com / admin123
+  - juan@crm.com / comercial123
+  - cliente@crm.com / cliente123
 6. **Ejecutar migraciones**
 Ejecutar los archivos SQL en el siguiente orden:
 - `create_initial_schema.sql`

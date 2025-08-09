@@ -141,12 +141,13 @@ const Login: React.FC = () => {
                   </h3>
                   <div className="mt-2 text-sm text-yellow-700">
                     <p>
-                      Si obtienes un error "Email not confirmed", necesitas deshabilitar la confirmación de email en tu proyecto de Supabase:
+                      Si obtienes un error "Email not confirmed", necesitas deshabilitar la confirmación de email en Supabase:
                     </p>
                     <ol className="mt-2 list-decimal list-inside space-y-1">
-                      <li>Ve a tu dashboard de Supabase</li>
-                      <li>Navega a Authentication → Emails</li>
-                      <li>Desactiva "Enable email confirmations"</li>
+                      <li>Ve a Authentication → Settings (no visible en sidebar, busca en la URL)</li>
+                      <li>O ve a Authentication → Users → Settings</li>
+                      <li>Busca "Enable email confirmations" y desactívalo</li>
+                      <li>Alternativamente, crea los usuarios manualmente en Authentication → Users</li>
                     </ol>
                   </div>
                 </div>
