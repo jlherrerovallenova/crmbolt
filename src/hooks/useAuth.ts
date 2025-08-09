@@ -38,13 +38,19 @@ export function useAuth() {
         .from('users')
         .select('*')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
         setUser(null);
       } else {
-        setUser(data);
+        if (data) {
+          setUser(data);
+        } else {
+          // User profile doesn't exist in custom users table
+          console.warn('User profile not found in users table for:', authUser.email);
+          setUser(null);
+        }
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
