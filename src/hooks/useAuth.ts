@@ -51,12 +51,6 @@ export function useAuth() {
           console.warn('User profile not found in users table for:', authUser.email);
           setUser(null);
         }
-          setUser(data);
-        } else {
-          // User profile doesn't exist in custom users table
-          console.warn('User profile not found in users table for:', authUser.email);
-          setUser(null);
-        }
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
