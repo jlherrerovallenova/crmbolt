@@ -142,14 +142,21 @@ VITE_SUPABASE_URL=tu_url_de_supabase
 VITE_SUPABASE_ANON_KEY=tu_clave_anonima
 ```
 
-5. **Ejecutar migraciones**
+5. **Configurar autenticación en Supabase**
+Para evitar errores de "Email not confirmed":
+- Ve a tu dashboard de Supabase
+- Navega a **Authentication** → **Settings**
+- Desactiva **"Enable email confirmations"**
+- Esto permite el login inmediato sin verificación de email
+
+6. **Ejecutar migraciones**
 Ejecutar los archivos SQL en el siguiente orden:
 - `create_initial_schema.sql`
 - `insert_sample_properties.sql`
 - `insert_sample_clients.sql`
 - `insert_promotion_assignments.sql`
 
-6. **Iniciar el servidor de desarrollo**
+7. **Iniciar el servidor de desarrollo**
 ```bash
 npm run dev
 ```
