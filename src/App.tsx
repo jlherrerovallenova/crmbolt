@@ -11,41 +11,101 @@ import Clients from './pages/Clients';
 import Documents from './pages/Documents';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
-import Setup from './pages/Setup';
+import Login from './pages/Login';
+import { useAuth } from './hooks/useAuth';
 
 function App() {
-  // Temporarily disable authentication - always show as logged in admin user
-  const mockUser = {
-    id: 'mock-admin-id',
-    email: 'admin@crm.com',
-    full_name: 'Administrador',
-    role: 'admin' as const
-  };
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Router>
+        <div className="App">
+          <EnvChecker />
+          <Toaster position="top-right" />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+          </Routes>
+        </div>
+      </Router>
+    );
+  }
 
   return (
     <Router>
       <div className="App">
         <EnvChecker />
         <Toaster position="top-right" />
-        <Routes>
-          <Route path="/setup" element={<Setup />} />
-          <Route
-            path="/*"
-            element={
-              <Layout mockUser={mockUser}>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/promotions" element={<Promotions />} />
-                  <Route path="/properties" element={<Properties />} />
-                  <Route path="/clients" element={<Clients />} />
-                  <Route path="/documents" element={<Documents />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/users" element={<Users />} />
-                </Routes>
-              </Layout>
-            }
-          />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path="/login" element={<Navigate to="/" />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'commercial', 'client']}>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/promotions"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
+                  <Promotions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/properties"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
+                  <Properties />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/clients"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
+                  <Clients />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/documents"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
+                  <Documents />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Users />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Layout>
       </div>
     </Router>
   );
