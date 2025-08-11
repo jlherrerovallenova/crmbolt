@@ -12,27 +12,25 @@ import {
   X,
   UserCheck
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
+import { UserProfile } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
+  mockUser?: UserProfile;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, mockUser }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Use mock user for now
+  const user = mockUser;
+
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (error) {
-      toast.error('Error al cerrar sesión');
-    } else {
-      toast.success('Sesión cerrada correctamente');
-      navigate('/login');
-    }
+    // Temporarily disabled - just show message
+    toast.success('Funcionalidad de logout temporalmente deshabilitada');
   };
 
   const navigation = [
