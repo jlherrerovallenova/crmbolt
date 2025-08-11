@@ -47,9 +47,18 @@ export function useAuth() {
         if (data) {
           setUser(data);
         } else {
-          // User profile doesn't exist in custom users table
+          // User profile doesn't exist in custom users table, create a basic one
           console.warn('User profile not found in users table for:', authUser.email);
-          setUser(null);
+          
+          // Create a temporary user profile based on auth user
+          const tempUser: UserProfile = {
+            id: authUser.id,
+            email: authUser.email || '',
+            full_name: authUser.email?.split('@')[0] || 'Usuario',
+            role: 'client' // Default role
+          };
+          
+          setUser(tempUser);
         }
       }
     } catch (error) {
