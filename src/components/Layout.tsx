@@ -6,13 +6,10 @@ import {
   Users, 
   FileText, 
   BarChart3, 
-  LogOut,
   Menu,
   X,
   UserCheck
 } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useAuth } from '../hooks/useAuth';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,34 +18,22 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut } = useAuth();
 
-  const handleSignOut = async () => {
-    try {
-      const { error } = await signOut();
-      if (error) {
-        toast.error('Error al cerrar sesión');
-      } else {
-        toast.success('Sesión cerrada correctamente');
-      }
-    } catch (error) {
-      toast.error('Error inesperado al cerrar sesión');
-    }
+  // Mock user for demo purposes
+  const mockUser = {
+    full_name: 'Usuario Demo',
+    role: 'admin'
   };
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: Home, roles: ['admin', 'commercial', 'client'] },
-    { name: 'Promociones', href: '/promotions', icon: Building2, roles: ['admin', 'commercial'] },
-    { name: 'Viviendas', href: '/properties', icon: Home, roles: ['admin', 'commercial'] },
-    { name: 'Clientes', href: '/clients', icon: Users, roles: ['admin', 'commercial'] },
-    { name: 'Documentos', href: '/documents', icon: FileText, roles: ['admin', 'commercial'] },
-    { name: 'Reportes', href: '/reports', icon: BarChart3, roles: ['admin', 'commercial'] },
-    { name: 'Usuarios', href: '/users', icon: UserCheck, roles: ['admin'] },
+    { name: 'Dashboard', href: '/', icon: Home },
+    { name: 'Promociones', href: '/promotions', icon: Building2 },
+    { name: 'Viviendas', href: '/properties', icon: Home },
+    { name: 'Clientes', href: '/clients', icon: Users },
+    { name: 'Documentos', href: '/documents', icon: FileText },
+    { name: 'Reportes', href: '/reports', icon: BarChart3 },
+    { name: 'Usuarios', href: '/users', icon: UserCheck },
   ];
-
-  const filteredNavigation = navigation.filter(item => 
-    item.roles.includes(user?.role || '')
-  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,7 +58,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="ml-2 text-xl font-bold text-gray-900">CRM Inmobiliario</span>
             </div>
             <nav className="mt-5 px-2 space-y-1">
-              {filteredNavigation.map((item) => {
+              {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
                 return (
@@ -98,8 +83,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
             <div className="flex items-center">
               <div className="ml-3">
-                <p className="text-base font-medium text-gray-700">{user?.full_name}</p>
-                <p className="text-sm font-medium text-gray-500 capitalize">{user?.role}</p>
+                <p className="text-base font-medium text-gray-700">{mockUser.full_name}</p>
+                <p className="text-sm font-medium text-gray-500 capitalize">{mockUser.role}</p>
               </div>
             </div>
           </div>
@@ -115,7 +100,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="ml-2 text-xl font-bold text-gray-900">CRM Inmobiliario</span>
             </div>
             <nav className="mt-5 flex-1 px-2 bg-white space-y-1">
-              {filteredNavigation.map((item) => {
+              {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.href;
                 return (
@@ -139,16 +124,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
             <div className="flex items-center w-full">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">{user?.full_name}</p>
-                <p className="text-xs font-medium text-gray-500 capitalize">{user?.role}</p>
+                <p className="text-sm font-medium text-gray-700">{mockUser.full_name}</p>
+                <p className="text-xs font-medium text-gray-500 capitalize">{mockUser.role}</p>
               </div>
-              <button
-                onClick={handleSignOut}
-                className="ml-3 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md"
-                title="Cerrar sesión"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
             </div>
           </div>
         </div>

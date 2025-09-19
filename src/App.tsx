@@ -1,8 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
 import EnvChecker from './components/EnvChecker';
 import Dashboard from './pages/Dashboard';
 import Promotions from './pages/Promotions';
@@ -11,35 +10,8 @@ import Clients from './pages/Clients';
 import Documents from './pages/Documents';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
-import Login from './pages/Login';
-import { useAuth } from './hooks/useAuth';
 
 function App() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <Router>
-        <div className="App">
-          <EnvChecker />
-          <Toaster position="top-right" />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="*" element={<Navigate to="/login" />} />
-          </Routes>
-        </div>
-      </Router>
-    );
-  }
-
   return (
     <Router>
       <div className="App">
@@ -47,63 +19,13 @@ function App() {
         <Toaster position="top-right" />
         <Layout>
           <Routes>
-            <Route path="/login" element={<Navigate to="/" />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'commercial', 'client']}>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/promotions"
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
-                  <Promotions />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/properties"
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
-                  <Properties />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/clients"
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
-                  <Clients />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/documents"
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
-                  <Documents />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute allowedRoles={['admin', 'commercial']}>
-                  <Reports />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <Users />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/promotions" element={<Promotions />} />
+            <Route path="/properties" element={<Properties />} />
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/documents" element={<Documents />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/users" element={<Users />} />
           </Routes>
         </Layout>
       </div>
