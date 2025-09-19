@@ -13,6 +13,7 @@ export function useAuth() {
       if (session?.user) {
         fetchUserProfile(session.user);
       } else {
+        setUser(null);
         setLoading(false);
       }
     });
@@ -38,18 +39,22 @@ export function useAuth() {
         .from('users')
         .select('*')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
-        setUser(null);
+        // Create temporary user profile if not found in users table
+        const tempUser: UserProfile = {
+          id: authUser.id,
+          email: authUser.email || '',
+          full_name: authUser.email?.split('@')[0] || 'Usuario',
+          role: 'client' // Default role
+        };
+        setUser(tempUser);
       } else {
         if (data) {
           setUser(data);
         } else {
-          // User profile doesn't exist in custom users table, create a basic one
-          console.warn('User profile not found in users table for:', authUser.email);
-          
           // Create a temporary user profile based on auth user
           const tempUser: UserProfile = {
             id: authUser.id,
@@ -57,13 +62,19 @@ export function useAuth() {
             full_name: authUser.email?.split('@')[0] || 'Usuario',
             role: 'client' // Default role
           };
-          
           setUser(tempUser);
         }
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      setUser(null);
+      // Create temporary user profile on error
+      const tempUser: UserProfile = {
+        id: authUser.id,
+        email: authUser.email || '',
+        full_name: authUser.email?.split('@')[0] || 'Usuario',
+        role: 'client'
+      };
+      setUser(tempUser);
     } finally {
       setLoading(false);
     }
