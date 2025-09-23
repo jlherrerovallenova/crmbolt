@@ -153,7 +153,7 @@ const Clients: React.FC = () => {
       {/* Lista de clientes */}
       <div className="grid grid-cols-1 gap-6">
         {filteredClients.map((client) => (
-          <div key={client.id} className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow">
+          <div key={client.id} className="bg-vfxdfvcbcvbcvwhite overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
