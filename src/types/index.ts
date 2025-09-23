@@ -56,7 +56,7 @@ export interface Client {
   municipality: string;
   postal_code: string;
   province: string;
-  marital_status: 'single' | 'married' | 'divorced' | 'widowed';
+  marital_status: 'single' | 'married_community' | 'married_separation' | 'domestic_partnership' | 'divorced' | 'widowed';
   phone_1: string;
   phone_2?: string;
   email_1: string;

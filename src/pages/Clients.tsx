@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Client } from '../types';
 import { Users, Phone, Mail, MapPin, CreditCard, Search, Eye, Plus } from 'lucide-react';
+import ClientFormModal from '../components/ClientFormModal';
 import toast from 'react-hot-toast';
 
 const Clients: React.FC = () => {
@@ -9,6 +10,7 @@ const Clients: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [maritalStatusFilter, setMaritalStatusFilter] = useState<string>('all');
+  const [showClientModal, setShowClientModal] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -53,7 +55,10 @@ const Clients: React.FC = () => {
   const getMaritalStatusText = (status: string) => {
     switch (status) {
       case 'single': return 'Soltero/a';
-      case 'married': return 'Casado/a';
+      case 'married': return 'Casado/a'; // Mantener compatibilidad
+      case 'married_community': return 'Casado/a en gananciales';
+      case 'married_separation': return 'Casado/a en separación de bienes';
+      case 'domestic_partnership': return 'Pareja de hecho';
       case 'divorced': return 'Divorciado/a';
       case 'widowed': return 'Viudo/a';
       default: return status;
@@ -63,7 +68,10 @@ const Clients: React.FC = () => {
   const getMaritalStatusColor = (status: string) => {
     switch (status) {
       case 'single': return 'bg-blue-100 text-blue-800';
-      case 'married': return 'bg-green-100 text-green-800';
+      case 'married': return 'bg-green-100 text-green-800'; // Mantener compatibilidad
+      case 'married_community': return 'bg-green-100 text-green-800';
+      case 'married_separation': return 'bg-green-200 text-green-900';
+      case 'domestic_partnership': return 'bg-purple-100 text-purple-800';
       case 'divorced': return 'bg-yellow-100 text-yellow-800';
       case 'widowed': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -99,7 +107,10 @@ const Clients: React.FC = () => {
             Gestión de clientes y compradores ({filteredClients.length} clientes)
           </p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
+        <button 
+          onClick={() => setShowClientModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Cliente
         </button>
@@ -128,7 +139,10 @@ const Clients: React.FC = () => {
             >
               <option value="all">Todos los estados</option>
               <option value="single">Soltero/a</option>
-              <option value="married">Casado/a</option>
+              <option value="married">Casado/a</option> {/* Mantener compatibilidad */}
+              <option value="married_community">Casado/a en gananciales</option>
+              <option value="married_separation">Casado/a en separación de bienes</option>
+              <option value="domestic_partnership">Pareja de hecho</option>
               <option value="divorced">Divorciado/a</option>
               <option value="widowed">Viudo/a</option>
             </select>
@@ -222,6 +236,13 @@ const Clients: React.FC = () => {
           </p>
         </div>
       )}
+
+      {/* Modal de nuevo cliente */}
+      <ClientFormModal
+        isOpen={showClientModal}
+        onClose={() => setShowClientModal(false)}
+        onClientCreated={loadClients}
+      />
     </div>
   );
 };
