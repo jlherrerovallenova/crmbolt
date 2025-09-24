@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Client } from '../types';
-import { Users, Phone, Mail, MapPin, CreditCard, Search, Eye, Plus, Edit, Trash2, Home } from 'lucide-react';
+import { Users, Phone, Mail, MapPin, CreditCard, Search, Eye, Plus } from 'lucide-react';
 import ClientFormModal from '../components/ClientFormModal';
-import ClientDetailsModal from '../components/ClientDetailsModal';
 import toast from 'react-hot-toast';
 
 const Clients: React.FC = () => {
@@ -12,20 +11,14 @@ const Clients: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [maritalStatusFilter, setMaritalStatusFilter] = useState<string>('all');
   const [showClientModal, setShowClientModal] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [clientProperties, setClientProperties] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    loadData();
+    loadClients();
   }, []);
 
-  const loadData = async () => {
+  const loadClients = async () => {
     try {
       setLoading(true);
-      
-      // Cargar clientes
       const { data, error } = await supabase
         .from('clients')
         .select('*')
@@ -38,71 +31,11 @@ const Clients: React.FC = () => {
       }
 
       setClients(data || []);
-
-      // Cargar número de propiedades por cliente
-      const { data: propertyData, error: propertyError } = await supabase
-        .from('property_clients')
-        .select('client_id');
-
-      if (!propertyError && propertyData) {
-        const propertyCounts = propertyData.reduce((acc: { [key: string]: number }, item) => {
-          acc[item.client_id] = (acc[item.client_id] || 0) + 1;
-          return acc;
-        }, {});
-        setClientProperties(propertyCounts);
-      }
-
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error inesperado');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateClient = () => {
-    setSelectedClient(null);
-    setModalMode('create');
-    setShowClientModal(true);
-  };
-
-  const handleEditClient = (client: Client) => {
-    setSelectedClient(client);
-    setModalMode('edit');
-    setShowClientModal(true);
-  };
-
-  const handleViewClient = (client: Client) => {
-    setSelectedClient(client);
-    setShowDetailsModal(true);
-  };
-
-  const handleDeleteClient = async (client: Client) => {
-    if (!confirm(`¿Estás seguro de que quieres eliminar al cliente ${client.first_name} ${client.last_name}?`)) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', client.id);
-
-      if (error) {
-        console.error('Error deleting client:', error);
-        if (error.code === '23503') {
-          toast.error('No se puede eliminar el cliente porque tiene propiedades asignadas');
-        } else {
-          toast.error('Error al eliminar el cliente: ' + error.message);
-        }
-        return;
-      }
-
-      toast.success('Cliente eliminado correctamente');
-      loadData();
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Error inesperado al eliminar el cliente');
     }
   };
 
@@ -175,11 +108,11 @@ const Clients: React.FC = () => {
           </p>
         </div>
         <button 
-          onClick={handleCreateClient}
+          onClick={() => setShowClientModal(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Añadir Cliente
+          Nuevo Cliente
         </button>
       </div>
 
@@ -218,157 +151,97 @@ const Clients: React.FC = () => {
       </div>
 
       {/* Lista de clientes */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cliente
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contacto
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ubicación
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado Civil
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Propiedades
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredClients.map((client) => (
-                <tr key={client.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0">
-                        <Users className="h-8 w-8 text-blue-600" />
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {client.first_name} {client.last_name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          DNI: {client.dni}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      <div className="flex items-center mb-1">
-                        <Phone className="h-4 w-4 mr-1 text-gray-400" />
-                        {client.phone_1}
-                      </div>
-                      <div className="flex items-center">
-                        <Mail className="h-4 w-4 mr-1 text-gray-400" />
-                        <span className="truncate max-w-xs">{client.email_1}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      <div className="flex items-center">
-                        <MapPin className="h-4 w-4 mr-1 text-gray-400" />
-                        {client.municipality}, {client.province}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMaritalStatusColor(client.marital_status)}`}>
-                      {getMaritalStatusText(client.marital_status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <Home className="h-4 w-4 mr-1 text-gray-400" />
-                      {clientProperties[client.id] || 0} propiedades
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button 
-                        onClick={() => handleViewClient(client)}
-                        className="text-blue-600 hover:text-blue-800 flex items-center"
-                        title="Ver detalles"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleEditClient(client)}
-                        className="text-green-600 hover:text-green-800 flex items-center"
-                        title="Editar"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteClient(client)}
-                        className="text-red-600 hover:text-red-800 flex items-center"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 gap-6">
+        {filteredClients.map((client) => (
+          <div key={client.id} className="bg-vfxdfvcbcvbcvwhite overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {client.first_name} {client.last_name}
+                    </h3>
+                    <p className="text-sm text-gray-500">DNI: {client.dni}</p>
+                  </div>
+                </div>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getMaritalStatusColor(client.marital_status)}`}>
+                  {getMaritalStatusText(client.marital_status)}
+                </span>
+              </div>
 
-      {/* Mensaje cuando no hay clientes */}
-      {filteredClients.length === 0 && !loading && (
-        <div className="bg-white shadow rounded-lg">
-          <div className="text-center py-12">
-            <Users className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No hay clientes</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || maritalStatusFilter !== 'all'
-                ? 'No se encontraron clientes con los filtros aplicados.'
-                : 'Comienza agregando un nuevo cliente.'
-              }
-            </p>
-            <div className="mt-6">
-              <button
-                onClick={handleCreateClient}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Añadir primer cliente
-              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Phone className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>{client.phone_1}</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                  <span className="truncate">{client.email_1}</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>{client.municipality}, {client.province}</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <CreditCard className="h-4 w-4 mr-2 text-gray-400" />
+                  <span className="truncate">***{client.bank_account.slice(-4)}</span>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Dirección:</span> {client.address}, {client.postal_code} {client.municipality}
+                </p>
+              </div>
+
+              {client.observations && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-md">
+                  <p className="text-sm text-gray-700">
+                    <span className="font-medium">Observaciones:</span> {client.observations}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-gray-500">
+                  Registrado: {new Date(client.created_at!).toLocaleDateString('es-ES')}
+                </div>
+                <div className="flex space-x-2">
+                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                    <Eye className="h-4 w-4 mr-1" />
+                    Ver detalles
+                  </button>
+                  <button className="text-gray-600 hover:text-gray-800 text-sm font-medium">
+                    Editar
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+        ))}
+      </div>
+
+      {filteredClients.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <Users className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No hay clientes</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {searchTerm || maritalStatusFilter !== 'all'
+              ? 'No se encontraron clientes con los filtros aplicados.'
+              : 'Comienza agregando un nuevo cliente.'
+            }
+          </p>
         </div>
       )}
 
-      {/* Modal de formulario de cliente */}
+      {/* Modal de nuevo cliente */}
       <ClientFormModal
         isOpen={showClientModal}
-        onClose={() => {
-          setShowClientModal(false);
-          setSelectedClient(null);
-        }}
-        onClientCreated={loadData}
-        client={selectedClient}
-        mode={modalMode}
-      />
-
-      {/* Modal de detalles del cliente */}
-      <ClientDetailsModal
-        isOpen={showDetailsModal}
-        onClose={() => {
-          setShowDetailsModal(false);
-          setSelectedClient(null);
-        }}
-        client={selectedClient}
+        onClose={() => setShowClientModal(false)}
+        onClientCreated={loadClients}
       />
     </div>
   );
