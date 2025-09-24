@@ -375,30 +375,3 @@ const Clients: React.FC = () => {
 };
 
 export default Clients;
-
-      </div>
-
-      {filteredClients.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <Users className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No hay clientes</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {searchTerm || maritalStatusFilter !== 'all'
-              ? 'No se encontraron clientes con los filtros aplicados.'
-              : 'Comienza agregando un nuevo cliente.'
-            }
-          </p>
-        </div>
-      )}
-
-      {/* Modal de nuevo cliente */}
-      <ClientFormModal
-        isOpen={showClientModal}
-        onClose={() => setShowClientModal(false)}
-        onClientCreated={loadClients}
-      />
-    </div>
-  );
-};
-
-export default Clients;
