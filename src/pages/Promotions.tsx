@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Promotion } from '../types';
-import { Building2, MapPin, Calendar, Users, DollarSign, Plus, Search, Filter } from 'lucide-react';
+import { Building2, MapPin, Calendar, Users, DollarSign, Plus, Search, Filter, Edit, Trash2, Eye } from 'lucide-react';
+import PromotionFormModal from '../components/PromotionFormModal';
 import toast from 'react-hot-toast';
 
 const Promotions: React.FC = () => {
@@ -9,6 +10,9 @@ const Promotions: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showPromotionModal, setShowPromotionModal] = useState(false);
+  const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
 
   useEffect(() => {
     loadPromotions();
@@ -41,11 +45,54 @@ const Promotions: React.FC = () => {
   };
 
   const filteredPromotions = promotions.filter(promotion => {
-    const matchesSearch = promotion.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         promotion.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      promotion.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      promotion.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      promotion.promotor.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || promotion.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const handleCreatePromotion = () => {
+    setSelectedPromotion(null);
+    setModalMode('create');
+    setShowPromotionModal(true);
+  };
+
+  const handleEditPromotion = (promotion: Promotion) => {
+    setSelectedPromotion(promotion);
+    setModalMode('edit');
+    setShowPromotionModal(true);
+  };
+
+  const handleDeletePromotion = async (promotion: Promotion) => {
+    if (!confirm(`¿Estás seguro de que quieres eliminar la promoción "${promotion.name}"?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('promotions')
+        .delete()
+        .eq('id', promotion.id);
+
+      if (error) {
+        console.error('Error deleting promotion:', error);
+        if (error.code === '23503') {
+          toast.error('No se puede eliminar la promoción porque tiene propiedades asociadas');
+        } else {
+          toast.error('Error al eliminar la promoción: ' + error.message);
+        }
+        return;
+      }
+
+      toast.success('Promoción eliminada correctamente');
+      loadPromotions();
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error inesperado al eliminar la promoción');
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -94,7 +141,10 @@ const Promotions: React.FC = () => {
             Gestión de promociones inmobiliarias ({filteredPromotions.length} promociones)
           </p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
+        <button 
+          onClick={handleCreatePromotion}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nueva Promoción
         </button>
@@ -108,7 +158,7 @@ const Promotions: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
-                placeholder="Buscar promociones..."
+                placeholder="Buscar por nombre, ubicación o promotor..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -131,7 +181,113 @@ const Promotions: React.FC = () => {
       </div>
 
       {/* Lista de promociones */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Promoción
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ubicación
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Estado
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Comercial
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Fechas
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Comisión
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredPromotions.map((promotion) => (
+                <tr key={promotion.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        <Building2 className="h-8 w-8 text-blue-600" />
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {promotion.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {promotion.phase} • {promotion.promotor}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-sm text-gray-900">
+                      <MapPin className="h-4 w-4 mr-1 text-gray-400" />
+                      {promotion.location}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(promotion.status)}`}>
+                      {getStatusText(promotion.status)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-sm text-gray-900">
+                      <Users className="h-4 w-4 mr-1 text-gray-400" />
+                      {promotion.commercial?.full_name || 'Sin asignar'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                      <div>
+                        <div>Inicio: {new Date(promotion.start_date).toLocaleDateString('es-ES')}</div>
+                        {promotion.end_date && (
+                          <div className="text-gray-500">Fin: {new Date(promotion.end_date).toLocaleDateString('es-ES')}</div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center text-sm text-gray-900">
+                      <DollarSign className="h-4 w-4 mr-1 text-gray-400" />
+                      {promotion.commission_percentage}%
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button 
+                        onClick={() => handleEditPromotion(promotion)}
+                        className="text-green-600 hover:text-green-800 flex items-center"
+                        title="Editar"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeletePromotion(promotion)}
+                        className="text-red-600 hover:text-red-800 flex items-center"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Vista de tarjetas para móvil (alternativa) */}
+      <div className="md:hidden grid grid-cols-1 gap-6">
         {filteredPromotions.map((promotion) => (
           <div key={promotion.id} className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow">
             <div className="p-6">
@@ -173,11 +329,19 @@ const Promotions: React.FC = () => {
                   <span className="font-medium">Promotor:</span> {promotion.promotor}
                 </div>
                 <div className="flex space-x-2">
-                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    Ver detalles
-                  </button>
-                  <button className="text-gray-600 hover:text-gray-800 text-sm font-medium">
+                  <button 
+                    onClick={() => handleEditPromotion(promotion)}
+                    className="text-green-600 hover:text-green-800 text-sm font-medium flex items-center"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
                     Editar
+                  </button>
+                  <button 
+                    onClick={() => handleDeletePromotion(promotion)}
+                    className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Eliminar
                   </button>
                 </div>
               </div>
@@ -187,7 +351,45 @@ const Promotions: React.FC = () => {
       </div>
 
       {filteredPromotions.length === 0 && !loading && (
-        <div className="text-center py-12">
+        <div className="bg-white shadow rounded-lg">
+          <div className="text-center py-12">
+            <Building2 className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No hay promociones</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm || statusFilter !== 'all' 
+                ? 'No se encontraron promociones con los filtros aplicados.'
+                : 'Comienza creando una nueva promoción.'
+              }
+            </p>
+            <div className="mt-6">
+              <button
+                onClick={handleCreatePromotion}
+                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Crear primera promoción
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de formulario de promoción */}
+      <PromotionFormModal
+        isOpen={showPromotionModal}
+        onClose={() => {
+          setShowPromotionModal(false);
+          setSelectedPromotion(null);
+        }}
+        onPromotionCreated={loadPromotions}
+        promotion={selectedPromotion}
+        mode={modalMode}
+      />
+    </div>
+  );
+};
+
+export default Promotions;
           <Building2 className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">No hay promociones</h3>
           <p className="mt-1 text-sm text-gray-500">
