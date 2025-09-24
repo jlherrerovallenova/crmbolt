@@ -16,6 +16,8 @@ interface ClientFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onClientCreated: () => void;
+  client?: Client | null;
+  mode: 'create' | 'edit';
 }
 
 interface ClientFormData {
@@ -34,7 +36,13 @@ interface ClientFormData {
   observations?: string;
 }
 
-const ClientFormModal: React.FC<ClientFormModalProps> = ({ isOpen, onClose, onClientCreated }) => {
+const ClientFormModal: React.FC<ClientFormModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onClientCreated, 
+  client = null, 
+  mode = 'create' 
+}) => {
   const [loading, setLoading] = useState(false);
   const [bankName, setBankName] = useState('');
 
@@ -46,6 +54,27 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ isOpen, onClose, onCl
     watch,
     setValue
   } = useForm<ClientFormData>();
+
+  // Cargar datos del cliente cuando se edita
+  React.useEffect(() => {
+    if (mode === 'edit' && client && isOpen) {
+      setValue('first_name', client.first_name);
+      setValue('last_name', client.last_name);
+      setValue('dni', client.dni);
+      setValue('address', client.address);
+      setValue('postal_code', client.postal_code);
+      setValue('municipality', client.municipality);
+      setValue('province', client.province);
+      setValue('email_1', client.email_1);
+      setValue('phone_1', client.phone_1);
+      setValue('phone_2', client.phone_2 || '');
+      setValue('marital_status', client.marital_status);
+      setValue('bank_account', client.bank_account);
+      setValue('observations', client.observations || '');
+    } else if (mode === 'create' && isOpen) {
+      reset();
+    }
+  }, [mode, client, isOpen, setValue, reset]);
 
   const watchedIBAN = watch('bank_account');
 
@@ -82,28 +111,39 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ isOpen, onClose, onCl
         bank_account: formatIBAN(data.bank_account)
       };
 
-      const { error } = await supabase
-        .from('clients')
-        .insert([clientData]);
+      let error;
+      
+      if (mode === 'create') {
+        const result = await supabase
+          .from('clients')
+          .insert([clientData]);
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('clients')
+          .update(clientData)
+          .eq('id', client!.id);
+        error = result.error;
+      }
 
       if (error) {
-        console.error('Error creating client:', error);
+        console.error(`Error ${mode === 'create' ? 'creating' : 'updating'} client:`, error);
         if (error.code === '23505') {
           toast.error('Ya existe un cliente con este DNI/NIE');
         } else {
-          toast.error('Error al crear el cliente: ' + error.message);
+          toast.error(`Error al ${mode === 'create' ? 'crear' : 'actualizar'} el cliente: ` + error.message);
         }
         return;
       }
 
-      toast.success('Cliente creado correctamente');
+      toast.success(`Cliente ${mode === 'create' ? 'creado' : 'actualizado'} correctamente`);
       reset();
       setBankName('');
       onClientCreated();
       onClose();
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error inesperado al crear el cliente');
+      toast.error(`Error inesperado al ${mode === 'create' ? 'crear' : 'actualizar'} el cliente`);
     } finally {
       setLoading(false);
     }
@@ -123,7 +163,7 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ isOpen, onClose, onCl
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-medium text-gray-900 flex items-center">
             <User className="h-5 w-5 mr-2 text-blue-600" />
-            Nuevo Cliente
+            {mode === 'create' ? 'Nuevo Cliente' : 'Editar Cliente'}
           </h3>
           <button
             onClick={handleClose}
@@ -411,7 +451,10 @@ const ClientFormModal: React.FC<ClientFormModalProps> = ({ isOpen, onClose, onCl
               disabled={loading}
               className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creando...' : 'Crear Cliente'}
+              {loading 
+                ? (mode === 'create' ? 'Creando...' : 'Actualizando...') 
+                : (mode === 'create' ? 'Crear Cliente' : 'Actualizar Cliente')
+              }
             </button>
           </div>
         </form>
