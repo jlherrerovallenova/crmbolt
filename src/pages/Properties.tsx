@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Property, Promotion } from '../types';
-import { Home, Building2, MapPin, Bed, Square, Euro, Search, Filter, Eye, Plus, Edit, Trash2, Upload } from 'lucide-react';
+import { Home, Building2, MapPin, Bed, Square, Euro, Search, Filter, Eye, Plus, CreditCard as Edit, Trash2, Upload } from 'lucide-react';
 import PropertyFormModal from '../components/PropertyFormModal';
 import toast from 'react-hot-toast';
 
