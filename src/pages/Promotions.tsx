@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Promotion, UserProfile } from '../types';
-import { Building2, MapPin, Calendar, Users, DollarSign, Plus, Eye, Edit, Trash2, Search } from 'lucide-react';
+import { Building2, MapPin, Calendar, Users, DollarSign, Plus, Eye, CreditCard as Edit, Trash2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PromotionFormModal from '../components/PromotionFormModal';
 
