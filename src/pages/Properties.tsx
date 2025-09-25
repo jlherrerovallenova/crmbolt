@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Property, Promotion } from '../types';
-import { Home, Building2, MapPin, Bed, Square, Euro, Search, Filter, Eye } from 'lucide-react';
+import { Home, Building2, MapPin, Bed, Square, Euro, Search, Filter, Eye, Plus, Edit, Trash2, Upload } from 'lucide-react';
+import PropertyFormModal from '../components/PropertyFormModal';
 import toast from 'react-hot-toast';
 
 const Properties: React.FC = () => {
@@ -11,6 +12,9 @@ const Properties: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [promotionFilter, setPromotionFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
 
   useEffect(() => {
     loadData();
@@ -67,6 +71,64 @@ const Properties: React.FC = () => {
     
     return matchesSearch && matchesPromotion && matchesStatus;
   });
+
+  const handleCreateProperty = () => {
+    setSelectedProperty(null);
+    setModalMode('create');
+    setShowModal(true);
+  };
+
+  const handleEditProperty = (property: Property) => {
+    setSelectedProperty(property);
+    setModalMode('edit');
+    setShowModal(true);
+  };
+
+  const handleDeleteProperty = async (property: Property) => {
+    if (!confirm(`¿Estás seguro de que quieres eliminar la vivienda ${property.floor}º${property.letter}?`)) {
+      return;
+    }
+
+    try {
+      // Check if property has assigned clients
+      const { count, error: countError } = await supabase
+        .from('property_clients')
+        .select('*', { count: 'exact', head: true })
+        .eq('property_id', property.id);
+
+      if (countError) {
+        console.error('Error checking property clients:', countError);
+        toast.error('Error al verificar los compradores');
+        return;
+      }
+
+      if (count && count > 0) {
+        toast.error(`No se puede eliminar la vivienda porque tiene ${count} comprador${count > 1 ? 'es' : ''} asignado${count > 1 ? 's' : ''}`);
+        return;
+      }
+
+      const { error } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', property.id);
+
+      if (error) {
+        console.error('Error deleting property:', error);
+        toast.error('Error al eliminar la vivienda: ' + error.message);
+        return;
+      }
+
+      toast.success('Vivienda eliminada correctamente');
+      loadData();
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Error inesperado al eliminar la vivienda');
+    }
+  };
+
+  const handleImportCSV = () => {
+    toast.info('Funcionalidad no implementada');
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -127,6 +189,22 @@ const Properties: React.FC = () => {
           <p className="mt-1 text-sm text-gray-600">
             Gestión de viviendas y propiedades ({filteredProperties.length} viviendas)
           </p>
+        </div>
+        <div className="flex space-x-3">
+          <button
+            onClick={handleImportCSV}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Importar CSV
+          </button>
+          <button
+            onClick={handleCreateProperty}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Vivienda
+          </button>
         </div>
       </div>
 
@@ -231,6 +309,29 @@ const Properties: React.FC = () => {
                   {property.observations}
                 </div>
               )}
+
+              <div className="flex justify-end space-x-2">
+                <button 
+                  className="text-gray-500 hover:text-gray-700 p-1"
+                  title="Ver detalles"
+                >
+                  <Eye className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={() => handleEditProperty(property)}
+                  className="text-blue-500 hover:text-blue-700 p-1"
+                  title="Editar"
+                >
+                  <Edit className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={() => handleDeleteProperty(property)}
+                  className="text-red-500 hover:text-red-700 p-1"
+                  title="Eliminar"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -248,6 +349,15 @@ const Properties: React.FC = () => {
           </p>
         </div>
       )}
+
+      {/* Modal de formulario */}
+      <PropertyFormModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onPropertyCreated={loadData}
+        property={selectedProperty}
+        mode={modalMode}
+      />
     </div>
   );
 };

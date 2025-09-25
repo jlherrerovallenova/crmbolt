@@ -38,13 +38,17 @@ export interface Property {
   garage_number?: string;
   storage_number?: string;
   final_price: number;
-  status: 'active' | 'reserved' | 'contract_signed' | 'sold_by_developer' | 'deed_signed';
+  status: 'active' | 'reserved' | 'contract_signed' | 'sold' | 'deed_signed';
   observations?: string;
   commercial_id?: string;
   vendedor_commercial_id?: string;
   portal?: string;
   created_at?: string;
   updated_at?: string;
+  promotion?: {
+    name: string;
+    location: string;
+  };
 }
 
 export interface Client {
